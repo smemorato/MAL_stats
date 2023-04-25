@@ -1,0 +1,82 @@
+import argparse
+import json
+
+import anilist_api
+from  mal_token import refresh_token, get_new_code_verifier,print_new_authorisation_url,\
+    generate_new_token,print_user_info
+import mal_api
+import mal_to_excel
+import anilist_to_excel
+#excel is used for anilist while excel_function is used for mal i probably should try to merged them somehow
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(     prog='PROG',
+        description='''Create an excel file with the stats of a given user''',
+        epilog='''
+        Hope  it works!!!''')
+
+
+    parser.add_argument("-u", "--username",
+                        required= True,
+                        help="type username",
+                        metavar= " ")
+    parser.add_argument("-s", "--source",
+                        required= True,
+                        choices = ["anilist","mal"],
+                        default="mal",
+                        help="pick the source of the username either mal or anilist (default: %(default)s)'",
+                        metavar= " ")
+    args = parser.parse_args()
+
+
+if args.source == "mal":
+    print("mal selected")
+    try:
+        with open('token.json', 'r') as file:
+            print(file)
+            token = json.load(file)
+            token = refresh_token(token)
+
+    except Exception as err:
+        print(err)
+        # todo make this a function in mal_api
+        code_verifier = code_challenge = get_new_code_verifier()
+        print_new_authorisation_url(code_challenge)
+        authorisation_code = input('Copy-paste the Authorisation Code: ').strip()
+        token = generate_new_token(authorisation_code, code_verifier)
+        print_user_info(token['access_token'])
+
+    response = mal_api.request_list(args.username, token["access_token"])
+    print(str(response[1]))
+    print("ok")
+
+    if response[1] == 200:
+        pass
+        mal_to_excel.to_excel(response[0], args.username)
+        # ani_to_mal(rtoken["access_token"])
+    elif response[1] == 404:
+        print("username doesn't exist")
+        print("please insert a valid username")
+    else:
+
+        print(response[1])
+
+elif args.source == "anilist":
+
+    response = anilist_api.get_user_id(args.username)
+
+    if response.status_code == 200:
+        data_id = json.loads(response.text)
+
+        user_id = data_id['data']['User']['id']
+        userlist = anilist_api.request_list(user_id)
+
+        anilist_to_excel.to_excel(userlist,args.username)
+
+    elif response.status_code == 404:
+        print("username doesn't exist")
+        print("please insert a valid username")
+    else:
+        print(response.status_code)
+
