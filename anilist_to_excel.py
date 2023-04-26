@@ -10,7 +10,7 @@ import mal_to_excel
 
 
 def to_excel(list, username):
-    file = "python1.xlsx"
+    file = "user_stats_template.xlsx"
     workbook = load_workbook(filename=file)
 
 

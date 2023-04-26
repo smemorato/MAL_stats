@@ -62,7 +62,6 @@ def anime_info(access_token: str):
     response = requests.get(url, params=PARAMS, headers={
         'Authorization': f'Bearer {access_token}'
     })
-    print(response.url)
     page = response.json()
 
     response.close()
@@ -79,8 +78,7 @@ def get_genre(access_token: str) -> list:
     response = requests.get(url, headers={
         'Authorization': f'Bearer {access_token}'
     })
-    # print(json.dumps(response.json(), indent=2))
-    print(response.raise_for_status())
+
 
 ##todo from a list from anilist use information from mal
 def ani_to_mal(access_token):
