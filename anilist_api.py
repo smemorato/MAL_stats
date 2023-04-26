@@ -54,6 +54,7 @@ def request_list(user_id: int):
                     format
                     seasonYear
                     season
+                    source
                     tags{
                         name
                     }
@@ -80,6 +81,8 @@ def request_list(user_id: int):
 
     # Make the HTTP Api request
     response = requests.post(url, json={'query': query, 'variables': variables})
+
+
     return response
 
 

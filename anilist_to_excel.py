@@ -10,26 +10,27 @@ import mal_to_excel
 
 
 def to_excel(list, username):
+    file = "python1.xlsx"
+    workbook = load_workbook(filename=file)
+
 
     userlist = list.json()
-    print(userlist)
-    df = pd.DataFrame(columns=[ "animeid", "title", "media type","mean score", "date_start", "date_finish", "my score", "year",
+    df = pd.DataFrame(columns=["ID", "title", "media type","source","mean score", "date_start", "date_finish", "my score", "year",
                                "season", "episodes", "episode duration"])
-    dfgenres = pd.DataFrame(columns=["animeid","genres"])
+    dfgenres = pd.DataFrame(columns=["ID","genres"])
     oldest = datetime.datetime.now().year
     seen = []
     for list in userlist["data"]["MediaListCollection"]["lists"]:
 
 
             for entry in list["entries"]:
-                print (entry)
                 if entry["media"]["id"] not in seen:
                     seen.append(entry["media"]["id"])
                     if entry['startedAt']['year'] and entry['startedAt']['year']<oldest:
                         oldest=entry['startedAt']['year']
 
 
-                    # get season by start date find needed
+                    # get season by start date if needed
                     if entry["media"]["season"]:
                         season = entry["media"]["seasonYear"]
                     elif entry["media"]["startDate"]["month"] in [1,2,3]:
@@ -42,7 +43,7 @@ def to_excel(list, username):
                         season = "SUMMER"
                     else:
                         season = "season no defined"
-
+                    # get year by start date if needed
                     if entry["media"]["seasonYear"]:
                         seasonyear = entry["media"]["seasonYear"]
                     elif entry["media"]["startDate"]["year"]:
@@ -74,6 +75,7 @@ def to_excel(list, username):
                         entry["media"]["id"],
                         entry["media"]["title"]["romaji"],
                         entry["media"]["format"],
+                        entry["media"]["source"],
                         entry["media"]["meanScore"]/10,
                         startdate,
                         completdate,
@@ -90,36 +92,22 @@ def to_excel(list, username):
                         dfgenres.loc[len(dfgenres.index)] = [entry["media"]["id"],tag["name"]]
 
 
-    print(df.dtypes)
+
     df["show duration"] = df["episode duration"]*df["episodes"]
-    print(df.dtypes)
     #in case the dates are not valid
     df["days watching"] = (pd.to_datetime(df["date_finish"], errors= "coerce")-
                            pd.to_datetime(df["date_start"], errors="coerce"))/ np.timedelta64(1, 'D')+1
     df["hours a day"] = pd.to_numeric(df["show duration"], errors= "coerce")/df["days watching"]
     df["episodes a day"] = df["episodes"] / df["days watching"]
 
-    dfanimegenres = pd.merge(df, dfgenres, how="inner", on="animeid")
-    file = "python1.xlsx"
-    workbook = load_workbook(filename=file)
 
-    workbook = mal_to_excel.insert_dates(oldest, workbook)
+
+
+
+    #resize tables on progresssion table
     workbook = mal_to_excel.resize_table(workbook, oldest)
-
     genreslist = dfgenres["genres"].unique().tolist()
     workbook = mal_to_excel.resize_genres_tables(workbook, genreslist)
 
-    with pd.ExcelWriter(f"userlist/{username}-anilist.xlsx", engine='openpyxl') as writer:
-
-
-        # adds workbook and sheets to writer
-        writer.book = workbook
-        print(workbook['user_list'])
-        writer.sheets = dict([('user_list', workbook['user_list']),("genres_table",workbook["genres_table"])])
-
-        df.to_excel(writer, sheet_name='user_list', header=False, startrow=1, index = False)
-        dfanimegenres.to_excel(writer, sheet_name='genres_table', header=False, startrow=1)
-
-
-        writer.sheets["user_list"].tables['tb_list'].ref = 'A1:O' + str(len(df) + 1)
-        writer.sheets["genres_table"].tables['tb_anime_genres'].ref = 'A1:Q' + str(len(dfgenres) + 1)
+    #write list to excel
+    mal_to_excel.insert_table(df, dfgenres, workbook, username,"anilist")

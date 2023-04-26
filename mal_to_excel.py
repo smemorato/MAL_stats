@@ -11,34 +11,47 @@ from openpyxl.formatting.rule import ColorScaleRule, CellIsRule, FormulaRule, Da
 import numpy as np
 
 
-def insert_table(df, df_genrestable, workbook, username):
+def insert_table(df, df_genrestable, workbook, username,source):
     # df = pd.json_normalize(json.dumps(anilist))
+    print(df)
+    print(type(df))
+    print(df.keys())
 
-    sheet = workbook['user_list']
-    table = sheet.tables['tb_list']
-    tablerange = table.ref
+    #Risize the list table
+    n = len(df.index)+1
+    print(n)
+    while workbook['user_list'].cell(row=n, column=2).value is not None:
+        workbook['user_list'].delete_rows(n, 1)
+
+
+
 
     merged = pd.merge(df, df_genrestable, how="inner", on="ID")
-    with pd.ExcelWriter(f"userlist/python1 - {username}.xlsx", engine='openpyxl') as writer:
+    # Risize the genres table
+    n = len(merged.index)+1
+    while workbook['genres_table'].cell(row=n, column=2).value is not None:
+        workbook['genres_tablet'].delete_rows(n, 1)
+
+    with pd.ExcelWriter(f"userlist/python1 - {username}_{source}.xlsx", engine='openpyxl') as writer:
 
 
         # adds workbook and sheets to writer
         writer.book = workbook
         writer.sheets = dict((ws.title, ws) for ws in workbook.worksheets)
 
-        df.to_excel(writer, sheet_name='user_list', header=False, startrow=1)
-        merged.to_excel(writer, sheet_name='genres_table', header=False, startrow=1)
+        df.to_excel(writer, sheet_name='user_list', header=False, startrow=1, index=False)
+        merged.to_excel(writer, sheet_name='genres_table', header=False, startrow=1, index=False)
 
-        writer.sheets["user_list"].tables['tb_list'].ref = 'A1:Q' + str(len(df) + 1)
-        writer.sheets["genres_table"].tables['tb_anime_genres'].ref = 'A1:R' + str(len(merged) + 1)
+        writer.sheets["user_list"].tables['tb_list'].ref = 'A1:P' + str(len(df) + 1)
+        writer.sheets["genres_table"].tables['tb_anime_genres'].ref = 'A1:Q' + str(len(merged) + 1)
 
-    print("please")
+
 
 
 def to_excel(userlist, username):
     file = "python1.xlsx"
     workbook = load_workbook(filename=file)
-    sheet = workbook['user_list']
+
     m = 1
     df= pd.DataFrame()
     for page in userlist:
@@ -52,7 +65,6 @@ def to_excel(userlist, username):
 
     pd.set_option("display.max_columns", None)
 
-    df_genreslist1 = df["genres"].explode().apply(pd.Series)["name"].unique()
     df_genreslist = df["genres"].explode().apply(pd.Series)
     df_genreslist["name"].fillna("no Genre", inplace=True)
     df_genreslist=df_genreslist["name"].unique()
@@ -60,7 +72,6 @@ def to_excel(userlist, username):
     print(df_genreslist)
     #df_genreslist.fillna("no Genre", inplace=True)
 
-    print("OKKKKKKKKKKKKKKK")
     df_genrestable = df[["ID","genres"]].copy()
     df_genrestable=df_genrestable.explode("genres")
     df_genrestable= pd.concat([df_genrestable.drop(["genres"], axis=1), df_genrestable["genres"].apply(pd.Series)], axis=1)
@@ -93,17 +104,6 @@ def to_excel(userlist, username):
     df["hours a day"] = pd.to_numeric(df["show duration"], errors= "coerce")/df["days watching"]
     df["episodes a day"] = df["ep watched"] / df["days watching"]
 
-    n = len(df.index)
-    sheet.tables['tb_list'].ref = 'A1:O' + str(n)
-    print(sheet.tables['tb_list'].ref)
-    n = n + 1
-    # eleminar valores de profile anterior tiver mais entries
-    while sheet.cell(row=n, column=2).value is not None:
-        sheet.delete_rows(n, 1)
-
-    # testar numero de entries
-    comp = n - 1
-    print(f'{comp} shows completos')
 
     oldest=pd.to_datetime(df['start date'], errors="coerce").min().year
 
@@ -116,7 +116,7 @@ def to_excel(userlist, username):
     workbook = resize_genres_tables(workbook, df_genreslist)
 
     # add genres to table
-    insert_table(df, df_genrestable, workbook, username)
+    insert_table(df, df_genrestable, workbook, username,"mal")
     # workbook.save(filename=f"/userlist/python1 - {username}.xlsx")
 
 
@@ -209,6 +209,7 @@ def resize_table(workbook, oldest: int):
         sheet[cellhoursday] = "=F{}/DAY(EOMONTH(DATE(B{},D{},1),0))".format(row, row, row)
         row = row + 1
     year = year +1
+
     if oldest < today_year:
         while year <= today_year:
             for i in range(1, 13):
@@ -383,7 +384,6 @@ def resize_table(workbook, oldest: int):
 
     sheet.tables['tb_progression_season'].ref = 'L2:R' + str(seasonrow - 1)
 
-    #add border to cells at the end of ther year
 
 
 
@@ -414,7 +414,7 @@ def resize_table(workbook, oldest: int):
     return workbook
 
 # I don't know who to get a list of all genres so I made a list of all genres in the user_list and then add to the tables
-# and since a new genre may be add i have to do it every time a update a userstats
+# and since a new genre may be add i have to do it every time
 def resize_genres_tables(workbook, genreslist):
     sheet = workbook['challenge']
     row = 3
@@ -464,7 +464,3 @@ def resize_genres_tables(workbook, genreslist):
 
     return workbook
 
-# todo: add the genres to the challenge worksheet
-
-def add_genre_to_tabel(genrelist):
-    pass
