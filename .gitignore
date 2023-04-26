@@ -1,6 +1,9 @@
 comparison
 old_excel/
 userlist/
+comparison_excel.py
+user comparison.xlsx
+user_comparison.py
 
 #this was copied from the following links
 ##https://github.com/github/gitignore/blob/main/Python.gitignore
