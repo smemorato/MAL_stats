@@ -1,6 +1,6 @@
 import requests
 import json
-import pandas as pd
+
 
 def request_list (username: str, access_token: str):
 

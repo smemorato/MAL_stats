@@ -2,11 +2,8 @@ from openpyxl import load_workbook
 from openpyxl import Workbook
 import datetime
 import json
-from dateutil.parser import parse
-from calendar import monthrange
 import pandas as pd
 from openpyxl.styles import Color, PatternFill, Font, Border, Side
-from openpyxl.styles.differential import DifferentialStyle
 from openpyxl.formatting.rule import ColorScaleRule, CellIsRule, FormulaRule, DataBarRule, IconSetRule
 import numpy as np
 

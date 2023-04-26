@@ -3,8 +3,7 @@ from openpyxl import Workbook
 import datetime
 import numpy as np
 import json
-from dateutil.parser import parse
-from calendar import monthrange
+
 import pandas as pd
 import mal_to_excel
 
