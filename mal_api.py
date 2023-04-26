@@ -27,32 +27,23 @@ def request_list (username: str, access_token: str):
     response = requests.get(url, params = PARAMS,headers={
         'Authorization': f'Bearer {access_token}'
     })
-
+    #print(json.dumps(response.json(),indent=3))
     #requests following pages
     page = response.json()
     userlist = []
     userlist.append(page)
     response.close()
+    if response.status_code == 200:
+        while "next" in page["paging"].keys():
+            response = requests.get(page["paging"]["next"], params=PARAMS, headers={
+                'Authorization': f'Bearer {access_token}'
+            })
+            page = response.json()
 
+            userlist.append(page)
+            print("another one!")
 
-
-
-
-
-
-
-    response.raise_for_status()
-    while "next" in page["paging"].keys():
-        response = requests.get(page["paging"]["next"], params=PARAMS, headers={
-            'Authorization': f'Bearer {access_token}'
-        })
-        page = response.json()
-        #print(json.dumps(page, indent=2))
-        userlist.append(page)
-        print("another one!")
-
-
-    response_list= [userlist, response.status_code]
+    response_list = [userlist, response.status_code]
 
     return response_list
 
@@ -75,7 +66,6 @@ def anime_info(access_token: str):
     page = response.json()
 
     response.close()
-    # print(json.dumps(page, indent=2))
     response.raise_for_status()
 
 
@@ -92,7 +82,7 @@ def get_genre(access_token: str) -> list:
     # print(json.dumps(response.json(), indent=2))
     print(response.raise_for_status())
 
-
+##todo from a list from anilist use information from mal
 def ani_to_mal(access_token):
     url = f'https://api.myanimelist.net/v2'
     PARAMS = {
@@ -109,5 +99,4 @@ def ani_to_mal(access_token):
     userlist = []
     userlist.append(page)
     response.close()
-    # print(json.dumps(userlist, indent=2))
     response.raise_for_status()

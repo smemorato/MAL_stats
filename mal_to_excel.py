@@ -5,7 +5,7 @@ import json
 from dateutil.parser import parse
 from calendar import monthrange
 import pandas as pd
-from openpyxl.styles import Color, PatternFill, Font, Border
+from openpyxl.styles import Color, PatternFill, Font, Border, Side
 from openpyxl.styles.differential import DifferentialStyle
 from openpyxl.formatting.rule import ColorScaleRule, CellIsRule, FormulaRule, DataBarRule, IconSetRule
 import numpy as np
@@ -31,7 +31,6 @@ def insert_table(df, df_genrestable, workbook, username):
 
         writer.sheets["user_list"].tables['tb_list'].ref = 'A1:Q' + str(len(df) + 1)
         writer.sheets["genres_table"].tables['tb_anime_genres'].ref = 'A1:R' + str(len(merged) + 1)
-    #print(merged)
 
     print("please")
 
@@ -50,44 +49,49 @@ def to_excel(userlist, username):
                     ,"score","ep watched","rewatched","update","start date","finish date"]
         df =pd.concat([df,page_df])
 
-    #pd.set_option("display.max_rows", None, "display.max_columns", None)
+
     pd.set_option("display.max_columns", None)
-    df_genreslist = df["genres"].explode().apply(pd.Series)["name"].unique()
 
+    df_genreslist1 = df["genres"].explode().apply(pd.Series)["name"].unique()
+    df_genreslist = df["genres"].explode().apply(pd.Series)
+    df_genreslist["name"].fillna("no Genre", inplace=True)
+    df_genreslist=df_genreslist["name"].unique()
+    print(type(df_genreslist))
+    print(df_genreslist)
+    #df_genreslist.fillna("no Genre", inplace=True)
 
-
+    print("OKKKKKKKKKKKKKKK")
     df_genrestable = df[["ID","genres"]].copy()
     df_genrestable=df_genrestable.explode("genres")
     df_genrestable= pd.concat([df_genrestable.drop(["genres"], axis=1), df_genrestable["genres"].apply(pd.Series)], axis=1)
     df_genrestable.drop(columns = ["id",0],inplace=True)
+    df_genrestable["name"].fillna("no Genre", inplace=True)
 
 
 
-    #df["season year"].fillna(df['Title'], inplace=True)
     df['start Date']= pd.to_datetime(df['start Date'], errors="coerce")
     df['start date'] = pd.to_datetime(df['start date'], errors="coerce")
     df['finish date'] = pd.to_datetime(df['finish date'], errors="coerce")
     df["ep duration"] = df["ep duration"]/3600
+
     df["aux"] = pd.to_numeric(pd.DatetimeIndex(df['start Date']).month, errors="coerce")
     df["aux"] = df["aux"].replace([[1,2,3],[4,5,6],[7,8,9],[10,11,12]], ["winter","spring","summer","fall"])
     df['start Date'] = pd.to_numeric(pd.DatetimeIndex(df['start Date']).year, errors="coerce")
-    df.drop(columns = ["pic big","pic medium","start Date","End Date"
-                ,"genres","num ep","studios","status",
-                "rewatched","update","aux"])
-
     df["season year"].fillna(df['start Date'], inplace=True)
     df["season"].fillna(df['aux'], inplace=True)
+
+    df.drop(columns=["pic big", "pic medium", "start Date", "End Date"
+        , "genres", "num ep", "studios", "status",
+                     "rewatched", "update", "aux"])
     df = df[["ID", "Title","type","source","mean","start date","finish date","score","season year", "season","ep watched",
              "ep duration"]]
     df["show duration"] = df["ep duration"]*df["ep watched"]
-    print(df.dtypes)
+    #print(df.dtypes)
     #in case the dates are not valid
     df["days watching"] = (pd.to_datetime(df["finish date"], errors= "coerce")-
                            pd.to_datetime(df["start date"], errors="coerce"))/ np.timedelta64(1, 'D')+1
     df["hours a day"] = pd.to_numeric(df["show duration"], errors= "coerce")/df["days watching"]
     df["episodes a day"] = df["ep watched"] / df["days watching"]
-
-
 
     n = len(df.index)
     sheet.tables['tb_list'].ref = 'A1:O' + str(n)
@@ -121,12 +125,12 @@ def insert_dates(oldest: int, workbook):
 
     date = datetime.datetime(year=oldest, month=1, day=1)
 
-    hoje = datetime.datetime.today()
+    today = datetime.datetime.today()
 
-    # (datetime.timedelta(days=1))
+
     i = 2
     sheet.cell(row=i, column=1).value = date
-    while date <= hoje:
+    while date <= today:
         i = i + 1
         date = date + datetime.timedelta(days=1)
 
@@ -162,6 +166,8 @@ def insert_dates(oldest: int, workbook):
 def resize_table(workbook, oldest: int):
     sheet = workbook['progression']
     table = sheet.tables['tb_progression_month']
+    #to add border when year changes
+    border = Border(bottom=Side(style='medium'))
 
     # RESIZE THE MONTH TABLE
     year = oldest
@@ -175,6 +181,13 @@ def resize_table(workbook, oldest: int):
     row = row + 1
 
     for i in range(2, 13):
+        # add border when year change
+        if i == 12:
+            tb_range = sheet['B{}'.format(row):'I{}'.format(row)]
+            for cell in tb_range:
+                for x in cell:
+                    x.border = border
+
         cellyear = "B{}".format(row)
         cellmonth = "C{}".format(row)
         cellmonthnumber = "D{}".format(row)
@@ -199,6 +212,13 @@ def resize_table(workbook, oldest: int):
     if oldest < today_year:
         while year <= today_year:
             for i in range(1, 13):
+                #add border when year change
+                if i == 12:
+                    tb_range = sheet['B{}'.format(row):'I{}'.format(row)]
+                    for cell in tb_range:
+                        for x in cell:
+                            x.border = border
+
                 cellyear = "B{}".format(row)
                 cellmonth = "C{}".format(row)
                 cellmonthnumber = "D{}".format(row)
@@ -223,6 +243,8 @@ def resize_table(workbook, oldest: int):
             year = year + 1
         table.ref = 'B2:J' + str(row - 1)
 
+
+
     # RESIZE THE SEASON TABLE
     seasonyear = oldest
     seasonrow = 3
@@ -230,11 +252,39 @@ def resize_table(workbook, oldest: int):
     sheet[cellseasonyear] = "=B3"
     cellseason = "M{}".format(seasonrow)
     sheet[cellseason] = "WINTER"
+    cellseasonep = "N{}".format(seasonrow)
+    sheet[cellseasonep] = '''=SUMIFS(tb_progression_month[ep],tb_progression_month[month2],
+    IF(M{}="WINTER","<=3",IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),tb_progression_month[month2],
+    IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],
+    L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow)
+    cellseasonhours = "O{}".format(seasonrow)
+    sheet[cellseasonhours] = '''=SUMIFS(tb_progression_month[hours spent],tb_progression_month[month2],
+    IF(M{}="WINTER","<=3",IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),tb_progression_month[month2],
+    IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],
+    L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow)
+    cellseasonfinish = "P{}".format(seasonrow)
+    sheet[cellseasonfinish] = '''=SUMIFS(tb_progression_month[finished shows],tb_progression_month[month2],
+    IF(M{}="WINTER","<=3",IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),tb_progression_month[month2],
+    IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],
+    L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow)
+    cellseasonpercentage = "Q{}".format(seasonrow)
+    sheet[cellseasonpercentage] = '''=IF(O{}>0,SUMIFS(days!D:D,days!F:F,IF(M{}="WINTER","<=3",
+    IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),days!F:F,IF(M{}="WINTER",">=1",
+    IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),days!G:G,L{})/O{},0)'''.format(seasonrow, seasonrow,
+                                                                                         seasonrow, seasonrow,
+                                                                                         seasonrow, seasonrow,
+                                                                                         seasonrow, seasonrow,
+                                                                                         seasonrow)
+    cellseasonhoursday = "R{}".format(seasonrow)
+    # I got lazy and considered each month month with 30 days
+    sheet[cellseasonhoursday] = '''=SUMIFS(tb_progression_month[hours spent],tb_progression_month[month2],
+    IF(M{}="WINTER","<=3",IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),tb_progression_month[month2],
+    IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],L{})
+    /90'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow)
     seasonrow = seasonrow+1
 
     for i in range(2, 5):
-        cellseasonyear = "L{}".format(seasonrow)
-        sheet[cellseasonyear] = "=L{}".format(seasonrow-1)
+
         cellseason = "M{}".format(seasonrow)
         if i == 2:
             sheet[cellseason] = "SPRING"
@@ -242,82 +292,101 @@ def resize_table(workbook, oldest: int):
             sheet[cellseason] = "SUMMER"
         elif i == 4:
             sheet[cellseason] = "FALL"
+            tb_range = sheet['L{}'.format(seasonrow):'R{}'.format(seasonrow)]
+            # add border when year change
+            for cell in tb_range:
+                for x in cell:
+                    x.border = border
 
         cellseasonep = "N{}".format(seasonrow)
         sheet[cellseasonep] = '''=SUMIFS(tb_progression_month[ep],tb_progression_month[month2],
         IF(M{}="WINTER","<=3",IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),tb_progression_month[month2],
         IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],
-        L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow)
+        L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow-i+1)
         cellseasonhours = "O{}".format(seasonrow)
         sheet[cellseasonhours] = '''=SUMIFS(tb_progression_month[hours spent],tb_progression_month[month2],
         IF(M{}="WINTER","<=3",IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),tb_progression_month[month2],
         IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],
-        L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow)
+        L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow-i+1)
         cellseasonfinish = "P{}".format(seasonrow)
         sheet[cellseasonfinish] = '''=SUMIFS(tb_progression_month[finished shows],tb_progression_month[month2],
         IF(M{}="WINTER","<=3",IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),tb_progression_month[month2],
         IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],
-        L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow)
+        L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow-i+1)
         cellseasonpercentage = "Q{}".format(seasonrow)
-        sheet[cellseasonpercentage] = '''=IF(O{}>0,SUMIFS(days!D:D,days!F:F,SE(M{}="WINTER","<=3",
+        sheet[cellseasonpercentage] = '''=IF(O{}>0,SUMIFS(days!D:D,days!F:F,IF(M{}="WINTER","<=3",
         IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),days!F:F,IF(M{}="WINTER",">=1",
-        IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),days!G:G,L{})/O{},
-        0)'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow)
+        IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),days!G:G,L{})/O{},0)'''.format(seasonrow, seasonrow,
+                                                                                             seasonrow, seasonrow,
+                                                                                             seasonrow, seasonrow,
+                                                                                             seasonrow, seasonrow-i+1,
+                                                                                             seasonrow)
         cellseasonhoursday = "R{}".format(seasonrow)
         # I got lazy and considered each month month with 30 days
         sheet[cellseasonhoursday] = '''=SUMIFS(tb_progression_month[hours spent],tb_progression_month[month2],
         IF(M{}="WINTER","<=3",IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),tb_progression_month[month2],
         IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],L{})
-        /90'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow)
+        /90'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow-i+1)
         seasonrow = seasonrow + 1
     seasonyear = seasonyear + 1
     if oldest <= today_year:
         while seasonyear <= today_year:
             for i in range(1,5):
-                cellseasonyear = "L{}".format(seasonrow)
-                sheet[cellseasonyear] = "=L{}+1".format(seasonrow - 4)
+
                 cellseason = "M{}".format(seasonrow)
                 if i == 1:
                     sheet[cellseason] = "WINTER"
+                    cellseasonyear = "L{}".format(seasonrow)
+                    sheet[cellseasonyear] = "=L{}+1".format(seasonrow - 4)
                 elif i ==2:
                     sheet[cellseason] = "SPRING"
                 elif i == 3:
                     sheet[cellseason] = "SUMMER"
                 elif i == 4:
                     sheet[cellseason] = "FALL"
+                    tb_range = sheet['L{}'.format(seasonrow):'R{}'.format(seasonrow)]
+                    # add border when year change
+                    for cell in tb_range:
+                        for x in cell:
+                            x.border = border
 
                 cellseasonep = "N{}".format(seasonrow)
                 sheet[cellseasonep] = '''=SUMIFS(tb_progression_month[ep],tb_progression_month[month2],
                         IF(M{}="WINTER","<=3",IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),tb_progression_month[month2],
                         IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],
-                        L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow)
+                        L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow-i+1)
                 cellseasonhours = "O{}".format(seasonrow)
                 sheet[cellseasonhours] = '''=SUMIFS(tb_progression_month[hours spent],tb_progression_month[month2],
                         IF(M{}="WINTER","<=3",IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),tb_progression_month[month2],
                         IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],
-                        L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow)
+                        L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow-i+1)
                 cellseasonfinish = "P{}".format(seasonrow)
                 sheet[cellseasonfinish] = '''=SUMIFS(tb_progression_month[finished shows],tb_progression_month[month2],
                         IF(M{}="WINTER","<=3",IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),tb_progression_month[month2],
                         IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],
-                        L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow)
+                        L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow-i+1)
                 cellseasonpercentage = "Q{}".format(seasonrow)
-                sheet[cellseasonpercentage] = '''=IF(O{}>0,SUMIFS(days!D:D,days!F:F,SE(M{}="WINTER","<=3",
+                sheet[cellseasonpercentage] = '''=IF(O{}>0,SUMIFS(days!D:D,days!F:F,IF(M{}="WINTER","<=3",
                         IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),days!F:F,IF(M{}="WINTER",">=1",
                         IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),days!G:G,L{})/O{},
                         0)'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow,
-                                     seasonrow, seasonrow)
+                                     seasonrow-i+1, seasonrow)
                 cellseasonhoursday = "R{}".format(seasonrow)
                 # I got lazy and considered each month month with 30 days
                 sheet[cellseasonhoursday] = '''=SUMIFS(tb_progression_month[hours spent],tb_progression_month[month2],
                         IF(M{}="WINTER","<=3",IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),tb_progression_month[month2],
                         IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],L{})
-                        /90'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow)
+                        /90'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow-i+1)
 
                 seasonrow = seasonrow +1
             seasonyear = seasonyear + 1
 
     sheet.tables['tb_progression_season'].ref = 'L2:R' + str(seasonrow - 1)
+
+    #add border to cells at the end of ther year
+
+
+
 
 
     # i had to add the conditional formatting in the code because even though the table size is increase the conditional formatting
@@ -344,27 +413,29 @@ def resize_table(workbook, oldest: int):
 
     return workbook
 
-
+# I don't know who to get a list of all genres so I made a list of all genres in the user_list and then add to the tables
+# and since a new genre may be add i have to do it every time a update a userstats
 def resize_genres_tables(workbook, genreslist):
     sheet = workbook['challenge']
     row = 3
     for genre in genreslist:
-        print(genre)
         cellgenres = "J{}".format(row)
         sheet[cellgenres] = genre
         celltotal = "K{}".format(row)
         sheet[celltotal] = '''=COUNTIFS(tb_anime_genres[genre],J{}, tb_anime_genres[my_start_date],
         ">=" & $B$1,tb_anime_genres[my_finish_date],"<="&$B$2)'''.format(row)
         cellpercentage = "L{}".format(row)
-        sheet[cellpercentage] = '=K{}/$C$8'.format(row)
+        sheet[cellpercentage] = '=K{}/$C$7'.format(row)
+        sheet[cellpercentage].number_format = "0.00%"
+
         cellaverage = "M{}".format(row)
         sheet[cellaverage] = '''=IF(K{}=0,0,AVERAGEIFS(tb_anime_genres[my_score],tb_anime_genres[genre],J{}, 
         tb_anime_genres[my_start_date],">=" & $B$1,tb_anime_genres[my_finish_date],"<="&$B$2))'''.format(row, row)
         cellhours = "N{}".format(row)
-        sheet[cellhours] = '''=SUMIFS(tb_anime_genres[show duration],tb_anime_genres[genre],J{}, tb_anime_genres[my_start_date],
+        sheet[cellhours] = '''=SUMIFS(tb_anime_genres[show duration (hours)],tb_anime_genres[genre],J{}, tb_anime_genres[my_start_date],
         ">=" & $B$1,tb_anime_genres[my_finish_date],"<="&$B$2)'''.format(row)
         cellweightedmean = "O{}".format(row)
-        sheet[cellweightedmean] = '''=IF(K{}=0,"",M{}*(K{}/$C$8)+$C$17*($C$8-K{})/$C$8)'''.format(row, row, row, row)
+        sheet[cellweightedmean] = '''=IF(K{}=0,0,M{}*(K{}/$C$7)+$C$16*($C$7-K{})/$C$7)'''.format(row, row, row, row)
         row = row+1
 
     sheet.tables['tb_challenge'].ref = 'I2:P' + str(row - 1)
@@ -378,10 +449,11 @@ def resize_genres_tables(workbook, genreslist):
         sheet[celltotal] = '''=COUNTIF(tb_anime_genres[genre],A{})'''.format(row)
         cellpercentage = "C{}".format(row)
         sheet[cellpercentage] = '=B{}/COUNTIF(tb_list[series_title],"<>"&"")'.format(row)
+        sheet[cellpercentage].number_format="0.00%"
         cellaverage = "D{}".format(row)
         sheet[cellaverage] = '''=AVERAGEIFS(tb_anime_genres[my_score],tb_anime_genres[genre],A{})'''.format(row)
         cellhours = "E{}".format(row)
-        sheet[cellhours] = '''=SUMIFS(tb_anime_genres[show duration],tb_anime_genres[genre],A{})'''.format(row)
+        sheet[cellhours] = '''=SUMIFS(tb_anime_genres[show duration (hours)],tb_anime_genres[genre],A{})'''.format(row)
         cellweightedmean = "F{}".format(row)
         sheet[cellweightedmean] = '''=D{}*(B{}/COUNTIF(tb_list[series_title], "<>"&""))+
         AVERAGEIF(tb_list[my_score],"<>"&0,tb_list[my_score])*(COUNTIF(tb_list[series_title],"<>"&"")-
@@ -393,7 +465,6 @@ def resize_genres_tables(workbook, genreslist):
     return workbook
 
 # todo: add the genres to the challenge worksheet
-# I don't know who to get a list of all genres so I made a list of all genres in the user_list and then add to the tables
-# and since a new genre may be add i have to do it every time a update a userstats
+
 def add_genre_to_tabel(genrelist):
     pass

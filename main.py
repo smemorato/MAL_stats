@@ -48,16 +48,15 @@ if args.source == "mal":
         print_user_info(token['access_token'])
 
     response = mal_api.request_list(args.username, token["access_token"])
-    print(str(response[1]))
-    print("ok")
 
     if response[1] == 200:
         pass
         mal_to_excel.to_excel(response[0], args.username)
-        # ani_to_mal(rtoken["access_token"])
+
     elif response[1] == 404:
         print("username doesn't exist")
         print("please insert a valid username")
+        print(f'error {response[1]}')
     else:
 
         print(response[1])

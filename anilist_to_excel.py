@@ -6,7 +6,7 @@ import json
 from dateutil.parser import parse
 from calendar import monthrange
 import pandas as pd
-import excel_function
+import mal_to_excel
 
 
 def to_excel(list, username):
@@ -103,11 +103,11 @@ def to_excel(list, username):
     file = "python1.xlsx"
     workbook = load_workbook(filename=file)
 
-    workbook = excel_function.insert_dates(oldest, workbook)
-    workbook = excel_function.resize_table(workbook, oldest)
+    workbook = mal_to_excel.insert_dates(oldest, workbook)
+    workbook = mal_to_excel.resize_table(workbook, oldest)
 
     genreslist = dfgenres["genres"].unique().tolist()
-    workbook = excel_function.resize_genres_tables(workbook, genreslist)
+    workbook = mal_to_excel.resize_genres_tables(workbook, genreslist)
 
     with pd.ExcelWriter(f"userlist/{username}-anilist.xlsx", engine='openpyxl') as writer:
 
