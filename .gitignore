@@ -1,12 +1,6 @@
-comparison
+comparison/
 old_excel/
 userlist/
-<<<<<<< HEAD
-=======
-comparison_excel.py
-user comparison.xlsx
-user_comparison.py
->>>>>>> main
 token.json
 
 #this was copied from the following links
