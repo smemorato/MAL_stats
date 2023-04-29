@@ -1,6 +1,6 @@
 import requests
 import json
-import pandas
+
 
 
 def get_user_id (username: str):
@@ -84,5 +84,6 @@ def request_list(user_id: int):
 
 
     return response
+
 
 

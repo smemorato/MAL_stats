@@ -2,24 +2,18 @@ from openpyxl import load_workbook
 from openpyxl import Workbook
 import datetime
 import json
-from dateutil.parser import parse
-from calendar import monthrange
 import pandas as pd
 from openpyxl.styles import Color, PatternFill, Font, Border, Side
-from openpyxl.styles.differential import DifferentialStyle
 from openpyxl.formatting.rule import ColorScaleRule, CellIsRule, FormulaRule, DataBarRule, IconSetRule
 import numpy as np
 
 
 def insert_table(df, df_genrestable, workbook, username,source):
     # df = pd.json_normalize(json.dumps(anilist))
-    print(df)
-    print(type(df))
-    print(df.keys())
+
 
     #Risize the list table
     n = len(df.index)+1
-    print(n)
     while workbook['user_list'].cell(row=n, column=2).value is not None:
         workbook['user_list'].delete_rows(n, 1)
 
@@ -32,7 +26,7 @@ def insert_table(df, df_genrestable, workbook, username,source):
     while workbook['genres_table'].cell(row=n, column=2).value is not None:
         workbook['genres_tablet'].delete_rows(n, 1)
 
-    with pd.ExcelWriter(f"userlist/python1 - {username}_{source}.xlsx", engine='openpyxl') as writer:
+    with pd.ExcelWriter(f"userlist/{username}_{source}.xlsx", engine='openpyxl') as writer:
 
 
         # adds workbook and sheets to writer
@@ -49,7 +43,7 @@ def insert_table(df, df_genrestable, workbook, username,source):
 
 
 def to_excel(userlist, username):
-    file = "python1.xlsx"
+    file = "user_stats_template.xlsx"
     workbook = load_workbook(filename=file)
 
     m = 1
@@ -68,8 +62,7 @@ def to_excel(userlist, username):
     df_genreslist = df["genres"].explode().apply(pd.Series)
     df_genreslist["name"].fillna("no Genre", inplace=True)
     df_genreslist=df_genreslist["name"].unique()
-    print(type(df_genreslist))
-    print(df_genreslist)
+
     #df_genreslist.fillna("no Genre", inplace=True)
 
     df_genrestable = df[["ID","genres"]].copy()
@@ -97,7 +90,7 @@ def to_excel(userlist, username):
     df = df[["ID", "Title","type","source","mean","start date","finish date","score","season year", "season","ep watched",
              "ep duration"]]
     df["show duration"] = df["ep duration"]*df["ep watched"]
-    #print(df.dtypes)
+
     #in case the dates are not valid
     df["days watching"] = (pd.to_datetime(df["finish date"], errors= "coerce")-
                            pd.to_datetime(df["start date"], errors="coerce"))/ np.timedelta64(1, 'D')+1
@@ -117,7 +110,7 @@ def to_excel(userlist, username):
 
     # add genres to table
     insert_table(df, df_genrestable, workbook, username,"mal")
-    # workbook.save(filename=f"/userlist/python1 - {username}.xlsx")
+
 
 
 def insert_dates(oldest: int, workbook):
@@ -152,7 +145,8 @@ def insert_dates(oldest: int, workbook):
         cell = "G{}".format(i)
         sheet[cell] = '=YEAR(A{})'.format(i)
 
-        # print(type(sheet.cell(row=i, column=1).value))
+
+
     sheet.tables['tb_days'].ref = 'A1:G' + str(i)
     i = i + 1
 

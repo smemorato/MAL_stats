@@ -78,7 +78,6 @@ def print_user_info(access_token: str):
 
     response.raise_for_status()
     user = response.json()
-    print(user)
     response.close()
 
     print(f"\n>>> Greetings {user['name']}! <<<")
