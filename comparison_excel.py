@@ -81,17 +81,27 @@ def to_excel(workbook, lists):
     df["episodes a day"] = df["ep watched"] / df["days watching"]
 
     df_average= df.groupby("username")["score"].mean()
-    print(df_average)
-    print(df_average)
     df=pd.merge(df, df_average, how="inner", on="username")
 
+    #https: // stackoverflow.com / questions / 11858472 / string - concatenation - of - two - pandas - columns
+    df["range_mean"] = df.reset_index().index+2
+    df["range_mean"] = df.agg(lambda x: f'''=IFERROR(vlookup(B{x['range_mean']},users_table[#All],4),"NA")''', axis=1)
+
+    #'''=IFERROR(vlookup(B{},users_table[#All],4),"NA")'''.format(df["date range mean score"])
+    print(df)
 
 
     df_users_genres = pd.merge(df, df_genrestable, how="inner", on="ID")
+    print(df_users_genres)
     df_anime = pd.DataFrame()
     df_anime["id"] = pd.unique(df["ID"])
     print(df_anime)
 
+    n = len(df_anime.index) + 2
+    while workbook['anime stats'].cell(row=n, column=2).value is not None:
+        print(n)
+        workbook['anime stats'].delete_rows(n, 1)
+        n=n+1
 
     with pd.ExcelWriter(f"comparison/ test.xlsx", engine='openpyxl') as writer:
 
@@ -104,9 +114,9 @@ def to_excel(workbook, lists):
         df_users_genres.to_excel(writer, sheet_name='users genres', header=False, startrow=1,na_rep='NA')
         df_anime.to_excel(writer,sheet_name="anime stats", header=False, startrow=4,na_rep='NA')
 
-        writer.sheets["users list"].tables['tb_userslist'].ref = 'A1:S' + str(len(df) + 1)
-        writer.sheets["users genres"].tables['table_genres'].ref = 'A1:T' + str(len(df_users_genres) + 1)
-        #writer.sheets["anime stats"].tables['tb_anime'].ref = 'A4:I' + str(len(df_anime) + 1)
+        writer.sheets["users list"].tables['tb_userslist'].ref = 'A1:T' + str(len(df) + 1)
+        writer.sheets["users genres"].tables['table_genres'].ref = 'A1:U' + str(len(df_users_genres) + 1)
+        writer.sheets["anime stats"].tables['tb_anime'].ref = 'A5:P' + str(len(df_anime) + 1)
     #print((lists[0][1][0]["data"]))
     #df.columns =["username", "aniemid", "title", "episode", "date_start", "date_finish", "score", "year", "season"]
 

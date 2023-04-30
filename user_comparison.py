@@ -1,16 +1,15 @@
 import argparse
 import json
-from  mal_token import refresh_token, get_new_code_verifier,print_new_authorisation_url,\
+from mal_token import refresh_token, get_new_code_verifier,print_new_authorisation_url,\
     generate_new_token,print_user_info
 import mal_api
-import excel_function
 from openpyxl import load_workbook
 import comparison_excel
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(     prog='PROG',
-        description='''Create an excel file with to compare user stats''',
+        description='''Create an excel file to compare user stats''',
         epilog='''
         Hope  it works!!!''')
 
@@ -32,7 +31,6 @@ if __name__ == "__main__":
     users = sheet[sheet.tables["users_table"].ref]
     content = []
     for ent in users:
-        print(ent)
         content.append(ent[1].value)
 
     # content2 = [[cell.value for cell in ent]
@@ -58,7 +56,7 @@ if __name__ == "__main__":
     while sheet.cell(row=row, column=1).value is not None:
 
         if sheet.cell(row=row, column=2).value == "mal":
-
+            print(sheet.cell(row=row, column=1).value)
             response = mal_api.request_list(sheet.cell(row=row, column=1).value, rtoken["access_token"])
             if response[1] == 200:
 
@@ -76,8 +74,7 @@ if __name__ == "__main__":
             print("anilist")
             print(sheet.cell(row=row, column=1).value)
         row = row + 1
-    for i in lists:
-        print(i[0])
+
     comparison_excel.to_excel(workbook, lists)
         #comparison_excel.to_excel(response[0], args.username)
 
