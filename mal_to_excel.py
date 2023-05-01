@@ -131,15 +131,15 @@ def insert_dates(oldest: int, workbook):
 
         # sheet.cell(row=i, column=2).value = '=SOMA.SE.S(user_list!N:N;user_list!E:E;"<="&A{};user_list!F:F;">="&A{}'.format(i, i)
         cell = "B{}".format(i)
-        sheet[cell] = '=SUMIFS(user_list!P:P,user_list!G:G,"<="&A{},user_list!H:H,">="&A{})'.format(i, i)
+        sheet[cell] = '=SUMIFS(user_list!O:O,user_list!F:F,"<="&A{},user_list!G:G,">="&A{})'.format(i, i)
         cell = "C{}".format(i)
-        sheet[cell] = '=SUMIFS(user_list!Q:Q,user_list!G:G,"<="&A{},user_list!H:H,">="&A{})'.format(i, i)
+        sheet[cell] = '=SUMIFS(user_list!P:P,user_list!F:F,"<="&A{},user_list!G:G,">="&A{})'.format(i, i)
         cell = "D{}".format(i)
         sheet[
-            cell] = '=SUMIFS(user_list!P:P,user_list!G:G,"<="&A{},user_list!H:H,">="&A{},user_list!J:J,days!G{})+SUMIFS(user_list!P:P,user_list!G:G,"<="&A{},user_list!H:H,">="&A{},user_list!J:J,days!G{}-1)'.format(
+            cell] = '=SUMIFS(user_list!O:O,user_list!F:F,"<="&A{},user_list!G:G,">="&A{},user_list!I:I,days!G{})+SUMIFS(user_list!P:P,user_list!F:F,"<="&A{},user_list!G:G,">="&A{},user_list!J:J,days!G{}-1)'.format(
             i, i, i, i, i, i)
         cell = "E{}".format(i)
-        sheet[cell] = '=COUNTIF(user_list!H:H,A{})'.format(i)
+        sheet[cell] = '=COUNTIF(user_list!G:G,A{})'.format(i)
         cell = "F{}".format(i)
         sheet[cell] = '=MONTH(A{})'.format(i)
         cell = "G{}".format(i)
@@ -253,7 +253,7 @@ def resize_table(workbook, oldest: int):
     IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],
     L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow)
     cellseasonhours = "O{}".format(seasonrow)
-    sheet[cellseasonhours] = '''=SUMIFS(tb_progression_month[hours spent],tb_progression_month[month2],
+    sheet[cellseasonhours] = '''=SUMIFS(tb_progression_month[Hours Watched],tb_progression_month[month2],
     IF(M{}="WINTER","<=3",IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),tb_progression_month[month2],
     IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],
     L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow)
@@ -272,7 +272,7 @@ def resize_table(workbook, oldest: int):
                                                                                          seasonrow)
     cellseasonhoursday = "R{}".format(seasonrow)
     # I got lazy and considered each month month with 30 days
-    sheet[cellseasonhoursday] = '''=SUMIFS(tb_progression_month[hours spent],tb_progression_month[month2],
+    sheet[cellseasonhoursday] = '''=SUMIFS(tb_progression_month[Hours Watched],tb_progression_month[month2],
     IF(M{}="WINTER","<=3",IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),tb_progression_month[month2],
     IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],L{})
     /90'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow)
@@ -299,7 +299,7 @@ def resize_table(workbook, oldest: int):
         IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],
         L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow-i+1)
         cellseasonhours = "O{}".format(seasonrow)
-        sheet[cellseasonhours] = '''=SUMIFS(tb_progression_month[hours spent],tb_progression_month[month2],
+        sheet[cellseasonhours] = '''=SUMIFS(tb_progression_month[Hours Watched],tb_progression_month[month2],
         IF(M{}="WINTER","<=3",IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),tb_progression_month[month2],
         IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],
         L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow-i+1)
@@ -318,7 +318,7 @@ def resize_table(workbook, oldest: int):
                                                                                              seasonrow)
         cellseasonhoursday = "R{}".format(seasonrow)
         # I got lazy and considered each month month with 30 days
-        sheet[cellseasonhoursday] = '''=SUMIFS(tb_progression_month[hours spent],tb_progression_month[month2],
+        sheet[cellseasonhoursday] = '''=SUMIFS(tb_progression_month[Hours Watched],tb_progression_month[month2],
         IF(M{}="WINTER","<=3",IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),tb_progression_month[month2],
         IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],L{})
         /90'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow-i+1)
@@ -351,7 +351,7 @@ def resize_table(workbook, oldest: int):
                         IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],
                         L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow-i+1)
                 cellseasonhours = "O{}".format(seasonrow)
-                sheet[cellseasonhours] = '''=SUMIFS(tb_progression_month[hours spent],tb_progression_month[month2],
+                sheet[cellseasonhours] = '''=SUMIFS(tb_progression_month[Hours Watched],tb_progression_month[month2],
                         IF(M{}="WINTER","<=3",IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),tb_progression_month[month2],
                         IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],
                         L{})'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow-i+1)
@@ -368,7 +368,7 @@ def resize_table(workbook, oldest: int):
                                      seasonrow-i+1, seasonrow)
                 cellseasonhoursday = "R{}".format(seasonrow)
                 # I got lazy and considered each month month with 30 days
-                sheet[cellseasonhoursday] = '''=SUMIFS(tb_progression_month[hours spent],tb_progression_month[month2],
+                sheet[cellseasonhoursday] = '''=SUMIFS(tb_progression_month[Hours Watched],tb_progression_month[month2],
                         IF(M{}="WINTER","<=3",IF(M{}="SPRING","<=6",IF(M{}="SUMMER","<=9","<=12"))),tb_progression_month[month2],
                         IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],L{})
                         /90'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow-i+1)

@@ -107,6 +107,6 @@ def to_excel(list, username):
     workbook = mal_to_excel.resize_table(workbook, oldest)
     genreslist = dfgenres["genres"].unique().tolist()
     workbook = mal_to_excel.resize_genres_tables(workbook, genreslist)
-
+    workbook=mal_to_excel.insert_dates(oldest,workbook)
     #write list to excel
     mal_to_excel.insert_table(df, dfgenres, workbook, username,"anilist")
