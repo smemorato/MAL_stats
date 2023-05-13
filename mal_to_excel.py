@@ -12,22 +12,19 @@ def insert_table(df, df_genrestable, workbook, username,source):
     # df = pd.json_normalize(json.dumps(anilist))
 
 
-    #Risize the list table
+    # Risize the list table
     n = len(df.index)+1
     while workbook['user_list'].cell(row=n, column=2).value is not None:
         workbook['user_list'].delete_rows(n, 1)
 
-
-
-
     merged = pd.merge(df, df_genrestable, how="inner", on="ID")
-    # Risize the genres table
+    # Resize the genres table
     n = len(merged.index)+1
+
     while workbook['genres_table'].cell(row=n, column=2).value is not None:
         workbook['genres_tablet'].delete_rows(n, 1)
 
     with pd.ExcelWriter(f"userlist/{username}_{source}.xlsx", engine='openpyxl') as writer:
-
 
         # adds workbook and sheets to writer
         writer.book = workbook
@@ -40,86 +37,80 @@ def insert_table(df, df_genrestable, workbook, username,source):
         writer.sheets["genres_table"].tables['tb_anime_genres'].ref = 'A1:Q' + str(len(merged) + 1)
 
 
-
-
 def to_excel(userlist, username):
     file = "user_stats_template.xlsx"
     workbook = load_workbook(filename=file)
 
     m = 1
-    df= pd.DataFrame()
+    df = pd.DataFrame()
     for page in userlist:
         page_df = pd.json_normalize(page['data'])
 
-        page_df.columns = ["ID", "Title","pic big","pic medium","start Date","End Date","mean",
-                    "type","genres","num ep","season year", "season","source","ep duration","studios","status"
-                    ,"score","ep watched","rewatched","update","start date","finish date"]
-        df =pd.concat([df,page_df])
+        page_df.columns = ["ID", "Title", "pic big", "pic medium", "start Date", "End Date", "mean", "type", "genres",
+                           "num ep", "season year", "season", "source", "ep duration", "studios", "status", "score",
+                           "ep watched", "rewatched", "update", "start date", "finish date"]
+        df = pd.concat([df, page_df])
 
 
     pd.set_option("display.max_columns", None)
 
     df_genreslist = df["genres"].explode().apply(pd.Series)
     df_genreslist["name"].fillna("no Genre", inplace=True)
-    df_genreslist=df_genreslist["name"].unique()
+    df_genreslist = df_genreslist["name"].unique()
 
-    #df_genreslist.fillna("no Genre", inplace=True)
+    # df_genreslist.fillna("no Genre", inplace=True)
 
-    df_genrestable = df[["ID","genres"]].copy()
-    df_genrestable=df_genrestable.explode("genres")
-    df_genrestable= pd.concat([df_genrestable.drop(["genres"], axis=1), df_genrestable["genres"].apply(pd.Series)], axis=1)
-    df_genrestable.drop(columns = ["id",0],inplace=True)
+    df_genrestable = df[["ID", "genres"]].copy()
+    df_genrestable = df_genrestable.explode("genres")
+    df_genrestable = pd.concat([df_genrestable.drop(["genres"], axis=1), df_genrestable["genres"].apply(pd.Series)], axis=1)
+    df_genrestable.drop(columns=["id", 0], inplace=True)
     df_genrestable["name"].fillna("no Genre", inplace=True)
 
-
-
-    df['start Date']= pd.to_datetime(df['start Date'], errors="coerce")
+    df['start Date'] = pd.to_datetime(df['start Date'], errors="coerce")
     df['start date'] = pd.to_datetime(df['start date'], errors="coerce")
     df['finish date'] = pd.to_datetime(df['finish date'], errors="coerce")
     df["ep duration"] = df["ep duration"]/3600
 
     df["aux"] = pd.to_numeric(pd.DatetimeIndex(df['start Date']).month, errors="coerce")
-    df["aux"] = df["aux"].replace([[1,2,3],[4,5,6],[7,8,9],[10,11,12]], ["winter","spring","summer","fall"])
-    df['start Date'] = pd.to_numeric(pd.DatetimeIndex(df['start Date']).year, errors="coerce")
-    df["season year"].fillna(df['start Date'], inplace=True)
+    df["aux"] = df["aux"].replace([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]], ["winter", "spring", "summer", "fall"])
     df["season"].fillna(df['aux'], inplace=True)
+    df['aux'] = pd.to_numeric(pd.DatetimeIndex(df['start Date']).year, errors="coerce")
+    df["season year"].fillna(df['aux'], inplace=True)
 
     df.drop(columns=["pic big", "pic medium", "start Date", "End Date"
         , "genres", "num ep", "studios", "status",
                      "rewatched", "update", "aux"])
-    df = df[["ID", "Title","type","source","mean","start date","finish date","score","season year", "season","ep watched",
-             "ep duration"]]
+    df = df[["ID", "Title", "type", "source", "mean", "start date", "finish date", "score", "season year", "season",
+             "ep watched", "ep duration"]]
     df["show duration"] = df["ep duration"]*df["ep watched"]
 
-    #in case the dates are not valid
-    df["days watching"] = (pd.to_datetime(df["finish date"], errors= "coerce")-
-                           pd.to_datetime(df["start date"], errors="coerce"))/ np.timedelta64(1, 'D')+1
+    # in case the dates are not valid
+    df["days watching"] = (pd.to_datetime(df["finish date"], errors= "coerce") -
+                           pd.to_datetime(df["start date"], errors="coerce")) / np.timedelta64(1, 'D')+1
     df["hours a day"] = pd.to_numeric(df["show duration"], errors= "coerce")/df["days watching"]
     df["episodes a day"] = df["ep watched"] / df["days watching"]
 
 
-    oldest=pd.to_datetime(df['start date'], errors="coerce").min().year
+    oldest = pd.to_datetime(df['start date'], errors="coerce").min().year
 
-    #add all dates starting from the 1st of january of the oldest year entry to ""Dias"" woorksheet
-    workbook = insert_dates(oldest, workbook)
+    # add all dates starting from the 1st of january of the oldest year entry to ""Dias"" woorksheet
+    workbook = resize_days_table(oldest, workbook)
 
     # resize the table to fit the new entries
-    workbook = resize_table(workbook, oldest)
+    workbook = resize_table_progression(workbook, oldest)
 
-    workbook = resize_genres_tables(workbook, df_genreslist)
+    workbook = resize_challenge_tables(workbook, df_genreslist)
 
     # add genres to table
     insert_table(df, df_genrestable, workbook, username,"mal")
 
 
-
-def insert_dates(oldest: int, workbook):
+def resize_days_table(oldest: int, workbook):
     sheet = workbook['days']
 
     date = datetime.datetime(year=oldest, month=1, day=1)
 
     today = datetime.datetime.today()
-
 
     i = 2
     sheet.cell(row=i, column=1).value = date
@@ -155,9 +146,10 @@ def insert_dates(oldest: int, workbook):
         i = i + 1
     return workbook
 
-
+# todo in these function of resizig the tables it's probably a good idea to make a dataframe with the formulae and then
+#  add to excel instead of iterating the through every cell
 # updates table size to fit the new entries
-def resize_table(workbook, oldest: int):
+def resize_table_progression(workbook, oldest: int):
     sheet = workbook['progression']
     table = sheet.tables['tb_progression_month']
     #to add border when year changes
@@ -207,7 +199,7 @@ def resize_table(workbook, oldest: int):
     if oldest < today_year:
         while year <= today_year:
             for i in range(1, 13):
-                #add border when year change
+                # add border when year change
                 if i == 12:
                     tb_range = sheet['B{}'.format(row):'I{}'.format(row)]
                     for cell in tb_range:
@@ -323,7 +315,7 @@ def resize_table(workbook, oldest: int):
         IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],L{})
         /90'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow-i+1)
         seasonrow = seasonrow + 1
-    seasonyear = seasonyear + 1
+        seasonyear = seasonyear + 1
     if oldest <= today_year:
         while seasonyear <= today_year:
             for i in range(1,5):
@@ -378,13 +370,10 @@ def resize_table(workbook, oldest: int):
 
     sheet.tables['tb_progression_season'].ref = 'L2:R' + str(seasonrow - 1)
 
-
-
-
-
-
-    # i had to add the conditional formatting in the code because even though the table size is increase the conditional formatting
-    # remains the same
+    # i had to add the conditional formatting in the code because even though the table size is increase the conditional
+    # formatting remains the same
+    # Apparently if you enter the entire column in the conditional formatting you don't need this but i'll leave it here
+    # for the month table the season has de conditional formatting in the entire column
 
     sheet.conditional_formatting.add("E3:E{}".format(row - 1),
                                      ColorScaleRule(start_type='min', start_color='f8696b',
@@ -409,7 +398,7 @@ def resize_table(workbook, oldest: int):
 
 # I don't know who to get a list of all genres so I made a list of all genres in the user_list and then add to the tables
 # and since a new genre may be add i have to do it every time
-def resize_genres_tables(workbook, genreslist):
+def resize_challenge_tables(workbook, genreslist):
     sheet = workbook['challenge']
     row = 3
     for genre in genreslist:

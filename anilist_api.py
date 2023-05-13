@@ -2,8 +2,7 @@ import requests
 import json
 
 
-
-def get_user_id (username: str):
+def get_user_id(username: str):
     query = '''
     query ($name: String,) { 
       User (name: $name ) { 
@@ -16,13 +15,11 @@ def get_user_id (username: str):
         'name': username
     }
 
-
     url = 'https://graphql.anilist.co'
 
     # Make the HTTP Api request
     response = requests.post(url, json={'query': query, 'variables': variables})
     return response
-
 
 
 def request_list(user_id: int):
@@ -81,7 +78,6 @@ def request_list(user_id: int):
 
     # Make the HTTP Api request
     response = requests.post(url, json={'query': query, 'variables': variables})
-
 
     return response
 
