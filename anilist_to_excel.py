@@ -7,7 +7,6 @@ import json
 import pandas as pd
 import mal_to_excel
 
-# todo make a dataframe with pd.json_normalize like in mal module
 def to_excel(userlist, username):
     file = "user_stats_template.xlsx"
     workbook = load_workbook(filename=file)
@@ -88,6 +87,6 @@ def to_excel(userlist, username):
     # resize tables on progression table
     workbook = mal_to_excel.resize_table_progression(workbook, oldest)
     workbook = mal_to_excel.resize_challenge_tables(workbook, df_genreslist)
-    workbook = mal_to_excel.resize_days_table(oldest, workbook)
+    df_days = mal_to_excel.resize_days_table(oldest, workbook)
     # write list to excel
-    mal_to_excel.insert_table(df, df_genrestable, workbook, username, "anilist")
+    mal_to_excel.insert_table(df, df_genrestable,df_days, workbook, username, "anilist")

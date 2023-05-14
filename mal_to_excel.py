@@ -8,7 +8,7 @@ from openpyxl.formatting.rule import ColorScaleRule, CellIsRule, FormulaRule, Da
 import numpy as np
 
 
-def insert_table(df, df_genrestable, workbook, username,source):
+def insert_table(df, df_genrestable,df_days, workbook, username,source):
     # df = pd.json_normalize(json.dumps(anilist))
 
 
@@ -32,9 +32,19 @@ def insert_table(df, df_genrestable, workbook, username,source):
 
         df.to_excel(writer, sheet_name='user_list', header=False, startrow=1, index=False)
         merged.to_excel(writer, sheet_name='genres_table', header=False, startrow=1, index=False)
+        df_days.to_excel(writer, sheet_name="days", header=False, startrow=1, index=False)
 
         writer.sheets["user_list"].tables['tb_list'].ref = 'A1:P' + str(len(df) + 1)
         writer.sheets["genres_table"].tables['tb_anime_genres'].ref = 'A1:Q' + str(len(merged) + 1)
+
+        #writer.sheets["progression"].column_dimensions["N"].number_format ="0.00"
+        #round numbers
+        for r in range(2,len(df_days)+3):
+            writer.sheets["days"][f'B{r}'].number_format = "0.00"
+            writer.sheets["days"][f'C{r}'].number_format = "0.00"
+            writer.sheets["days"][f'D{r}'].number_format = "0.00"
+
+
 
 
 def to_excel(userlist, username):
@@ -94,8 +104,8 @@ def to_excel(userlist, username):
 
     oldest = pd.to_datetime(df['start date'], errors="coerce").min().year
 
-    # add all dates starting from the 1st of january of the oldest year entry to ""Dias"" woorksheet
-    workbook = resize_days_table(oldest, workbook)
+    # get dataframe with date from the oldest date to today
+    df_days = resize_days_table(oldest, workbook)
 
     # resize the table to fit the new entries
     workbook = resize_table_progression(workbook, oldest)
@@ -103,50 +113,39 @@ def to_excel(userlist, username):
     workbook = resize_challenge_tables(workbook, df_genreslist)
 
     # add genres to table
-    insert_table(df, df_genrestable, workbook, username,"mal")
+    insert_table(df, df_genrestable, df_days, workbook, username, "mal")
 
 
 def resize_days_table(oldest: int, workbook):
-    sheet = workbook['days']
+
 
     oldest = datetime.datetime(year=oldest, month=1, day=1)
     today = datetime.datetime.today()
-    df_days =  pd.DataFrame()
+    df_days = pd.DataFrame()
     df_days["dates"] = pd.date_range(start=oldest,end=today)
-    df_days= df_days.assign(hours=)
     i = 2
-    sheet.cell(row=i, column=1).value = date
-    while date <= today:
-        i = i + 1
-        date = date + datetime.timedelta(days=1)
-
-        sheet.cell(row=i, column=1).value = date
-
-        # sheet.cell(row=i, column=2).value = '=SOMA.SE.S(user_list!N:N;user_list!E:E;"<="&A{};user_list!F:F;">="&A{}'.format(i, i)
-        cell = "B{}".format(i)
-        sheet[cell] = '=SUMIFS(user_list!O:O,user_list!F:F,"<="&A{},user_list!G:G,">="&A{})'.format(i, i)
-        cell = "C{}".format(i)
-        sheet[cell] = '=SUMIFS(user_list!P:P,user_list!F:F,"<="&A{},user_list!G:G,">="&A{})'.format(i, i)
-        cell = "D{}".format(i)
-        sheet[
-            cell] = '=SUMIFS(user_list!O:O,user_list!F:F,"<="&A{},user_list!G:G,">="&A{},user_list!I:I,days!G{})+SUMIFS(user_list!P:P,user_list!F:F,"<="&A{},user_list!G:G,">="&A{},user_list!J:J,days!G{}-1)'.format(
-            i, i, i, i, i, i)
-        cell = "E{}".format(i)
-        sheet[cell] = '=COUNTIF(user_list!G:G,A{})'.format(i)
-        cell = "F{}".format(i)
-        sheet[cell] = '=MONTH(A{})'.format(i)
-        cell = "G{}".format(i)
-        sheet[cell] = '=YEAR(A{})'.format(i)
 
 
+    df_days["aux"] = df_days.reset_index().index + 1
 
-    sheet.tables['tb_days'].ref = 'A1:G' + str(i)
-    i = i + 1
+    df_days["hours"] = df_days.agg(lambda x: f'''=SUMIFS(tb_list[Hours a Day],tb_list[Start Date],"<="&A{x['aux']},
+                                    tb_list[Finish Date],">="&A{x['aux']})''', axis=1)
+    df_days["ep"] = df_days.agg(lambda x: f'''=SUMIFS(tb_list[EP a Day],tb_list[Start Date],"<="&A{x['aux']},
+                                    tb_list[Finish Date],">="&A{x['aux']})''', axis=1)
 
-    while sheet.cell(row=i, column=2).value is not None:
-        sheet.delete_rows(i, 1)
-        i = i + 1
-    return workbook
+    df_days["hours season"] = df_days.agg(lambda x: f'''=SUMIFS(tb_list[Hours a Day],tb_list[Start Date],
+                                        "<="&A{x['aux']},tb_list[Finish Date],">="&A{x['aux']},tb_list[Year],
+                                        days!G{x['aux']})+SUMIFS(tb_list[Hours a Day],tb_list[Start Date],
+                                        "<="&A{x['aux']},tb_list[Finish Date],">="&A{x['aux']},tb_list[Year],
+                                        days!G{x['aux']}-1)''', axis=1)
+    df_days["finished shows"] = df_days.agg(lambda x: f'''=COUNTIF(user_list!G:G,A{x['aux']})''', axis=1)
+    df_days["month"] = df_days.agg(lambda x: f'''=MONTH(A{x['aux']})''', axis=1)
+    df_days["year"] = df_days.agg(lambda x: f'''=YEAR(A{x['aux']})''', axis=1)
+
+    df_days.drop(columns=["aux"], inplace=True)
+
+
+    return df_days
 
 # todo in these function of resizig the tables it's probably a good idea to make a dataframe with the formulae and then
 #  add to excel instead of iterating the through every cell
