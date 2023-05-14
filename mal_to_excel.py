@@ -316,10 +316,13 @@ def resize_table_progression(workbook, oldest: int):
         IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],L{})
         /90'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow-i+1)
         seasonrow = seasonrow + 1
-        seasonyear = seasonyear + 1
+
+    seasonyear = seasonyear + 1
     if oldest <= today_year:
         while seasonyear <= today_year:
+
             for i in range(1,5):
+
 
                 cellseason = "M{}".format(seasonrow)
                 if i == 1:
@@ -406,18 +409,18 @@ def resize_challenge_tables(workbook, genreslist):
         cellgenres = "J{}".format(row)
         sheet[cellgenres] = genre
         celltotal = "K{}".format(row)
-        sheet[celltotal] = '''=COUNTIFS(tb_anime_genres[genre],J{}, tb_anime_genres[my_start_date],
-        ">=" & $B$1,tb_anime_genres[my_finish_date],"<="&$B$2)'''.format(row)
+        sheet[celltotal] = '''=COUNTIFS(tb_anime_genres[Genres],J{}, tb_anime_genres[Start Date],
+        ">=" & $B$1,tb_anime_genres[Finish Date],"<="&$B$2)'''.format(row)
         cellpercentage = "L{}".format(row)
         sheet[cellpercentage] = '=K{}/$C$7'.format(row)
         sheet[cellpercentage].number_format = "0.00%"
 
         cellaverage = "M{}".format(row)
-        sheet[cellaverage] = '''=IF(K{}=0,0,AVERAGEIFS(tb_anime_genres[my_score],tb_anime_genres[genre],J{}, 
-        tb_anime_genres[my_start_date],">=" & $B$1,tb_anime_genres[my_finish_date],"<="&$B$2))'''.format(row, row)
+        sheet[cellaverage] = '''=IF(K{}=0,0,AVERAGEIFS(tb_anime_genres[Score],tb_anime_genres[Genres],J{}, 
+        tb_anime_genres[Start Date],">=" & $B$1,tb_anime_genres[Finish Date],"<="&$B$2))'''.format(row, row)
         cellhours = "N{}".format(row)
-        sheet[cellhours] = '''=SUMIFS(tb_anime_genres[show duration (hours)],tb_anime_genres[genre],J{}, tb_anime_genres[my_start_date],
-        ">=" & $B$1,tb_anime_genres[my_finish_date],"<="&$B$2)'''.format(row)
+        sheet[cellhours] = '''=SUMIFS(tb_anime_genres[Show Duration (hours)],tb_anime_genres[GENRES],J{}, tb_anime_genres[Start Date],
+        ">=" & $B$1,tb_anime_genres[Finish Date],"<="&$B$2)'''.format(row)
         cellweightedmean = "O{}".format(row)
         sheet[cellweightedmean] = '''=IF(K{}=0,0,M{}*(K{}/$C$7)+$C$16*($C$7-K{})/$C$7)'''.format(row, row, row, row)
         row = row+1
@@ -430,18 +433,18 @@ def resize_challenge_tables(workbook, genreslist):
         cellgenres = "A{}".format(row)
         sheet[cellgenres] = genre
         celltotal = "B{}".format(row)
-        sheet[celltotal] = '''=COUNTIF(tb_anime_genres[genre],A{})'''.format(row)
+        sheet[celltotal] = '''=COUNTIF(tb_anime_genres[Genres],A{})'''.format(row)
         cellpercentage = "C{}".format(row)
-        sheet[cellpercentage] = '=B{}/COUNTIF(tb_list[series_title],"<>"&"")'.format(row)
+        sheet[cellpercentage] = '=B{}/COUNTIF(tb_list[Title],"<>"&"")'.format(row)
         sheet[cellpercentage].number_format="0.00%"
         cellaverage = "D{}".format(row)
-        sheet[cellaverage] = '''=AVERAGEIFS(tb_anime_genres[my_score],tb_anime_genres[genre],A{})'''.format(row)
+        sheet[cellaverage] = '''=AVERAGEIFS(tb_anime_genres[Score],tb_anime_genres[Genres],A{})'''.format(row)
         cellhours = "E{}".format(row)
-        sheet[cellhours] = '''=SUMIFS(tb_anime_genres[show duration (hours)],tb_anime_genres[genre],A{})'''.format(row)
+        sheet[cellhours] = '''=SUMIFS(tb_anime_genres[Show Duration (hours)],tb_anime_genres[Genres],A{})'''.format(row)
         cellweightedmean = "F{}".format(row)
-        sheet[cellweightedmean] = '''=D{}*(B{}/COUNTIF(tb_list[series_title], "<>"&""))+
-        AVERAGEIF(tb_list[my_score],"<>"&0,tb_list[my_score])*(COUNTIF(tb_list[series_title],"<>"&"")-
-        B{})/COUNTIF(tb_list[series_title],"<>"&"")'''.format(row, row, row)
+        sheet[cellweightedmean] = '''=D{}*(B{}/COUNTIF(tb_list[Title], "<>"&""))+
+        AVERAGEIF(tb_list[Score],"<>"&0,tb_list[Score])*(COUNTIF(tb_list[Title],"<>"&"")-
+        B{})/COUNTIF(tb_list[Title],"<>"&"")'''.format(row, row, row)
         row = row + 1
 
     sheet.tables['tb_genres'].ref = 'A1:F' + str(row - 1)

@@ -52,7 +52,6 @@ def to_excel(userlist, username):
 
     df_genrestable = pd.concat([df_genrestable,df_tags.rename(columns={"name": "media.genres"})])
     df_genrestable.columns = ["ID", "genres"]
-    print(df_genrestable)
 
 
 
@@ -60,10 +59,7 @@ def to_excel(userlist, username):
                      "completedAt.day","status","media.tags","media.genres","media.startDate.year",
                      "media.startDate.month","media.startDate.day","mediastart","aux"], inplace=True)
 
-    with pd.option_context('display.max_columns', None,
-                           'display.precision', 3,):
 
-        print(df)
 
 
     df.columns=["score","ID", "title","episodes", "format","seasonYear", "season", "source", "ep duration","meanScore",
