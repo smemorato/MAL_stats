@@ -64,7 +64,6 @@ if args.source == "mal":
 elif args.source == "anilist":
 
     response = anilist_api.get_user_id(args.username)
-
     if response.status_code == 200:
         data_id = json.loads(response.text)
 

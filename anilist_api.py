@@ -44,9 +44,9 @@ def request_list(user_id: int):
                     id
                     title{
                         romaji
-                        english
+
                     }
-                    status
+
                     episodes
                     format
                     seasonYear
@@ -61,11 +61,12 @@ def request_list(user_id: int):
                     startDate{
                         year
                         month
+                        day
                     }
                 }
             }
-            status
-        }
+          name
+          }
       }
     }
     '''

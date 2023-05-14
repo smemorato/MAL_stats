@@ -66,6 +66,7 @@ def to_excel(userlist, username):
     df_genrestable.drop(columns=["id", 0], inplace=True)
     df_genrestable["name"].fillna("no Genre", inplace=True)
 
+    #filter wierd mal dates like 30/2/2022
     df['start Date'] = pd.to_datetime(df['start Date'], errors="coerce")
     df['start date'] = pd.to_datetime(df['start date'], errors="coerce")
     df['finish date'] = pd.to_datetime(df['finish date'], errors="coerce")
