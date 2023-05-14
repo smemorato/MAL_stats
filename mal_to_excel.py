@@ -109,10 +109,11 @@ def to_excel(userlist, username):
 def resize_days_table(oldest: int, workbook):
     sheet = workbook['days']
 
-    date = datetime.datetime(year=oldest, month=1, day=1)
-
+    oldest = datetime.datetime(year=oldest, month=1, day=1)
     today = datetime.datetime.today()
-
+    df_days =  pd.DataFrame()
+    df_days["dates"] = pd.date_range(start=oldest,end=today)
+    df_days= df_days.assign(hours=)
     i = 2
     sheet.cell(row=i, column=1).value = date
     while date <= today:
