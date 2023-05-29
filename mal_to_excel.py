@@ -16,6 +16,7 @@ def insert_table(df, df_genrestable,df_days, workbook, username,source):
     n = len(df.index)+1
     while workbook['user_list'].cell(row=n, column=2).value is not None:
         workbook['user_list'].delete_rows(n, 1)
+        n=n+1
 
     merged = pd.merge(df, df_genrestable, how="inner", on="ID")
     # Resize the genres table
@@ -23,11 +24,12 @@ def insert_table(df, df_genrestable,df_days, workbook, username,source):
 
     while workbook['genres_table'].cell(row=n, column=2).value is not None:
         workbook['genres_tablet'].delete_rows(n, 1)
+        n=n+1
 
     with pd.ExcelWriter(f"userlist/{username}_{source}.xlsx", engine='openpyxl') as writer:
 
         # adds workbook and sheets to writer
-        writer.book = workbook
+        writer.book= workbook
         writer.sheets = dict((ws.title, ws) for ws in workbook.worksheets)
 
         df.to_excel(writer, sheet_name='user_list', header=False, startrow=1, index=False)
