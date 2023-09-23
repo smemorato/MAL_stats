@@ -1,5 +1,4 @@
 from openpyxl import load_workbook
-from openpyxl import Workbook
 import datetime
 import json
 import pandas as pd
@@ -23,14 +22,17 @@ def insert_table(df, df_genrestable,df_days, workbook, username,source):
     n = len(merged.index)+1
 
     while workbook['genres_table'].cell(row=n, column=2).value is not None:
-        workbook['genres_tablet'].delete_rows(n, 1)
+        workbook['genres_table'].delete_rows(n, 1)
         n=n+1
+
+
 
     with pd.ExcelWriter(f"userlist/{username}_{source}.xlsx", engine='openpyxl') as writer:
 
         # adds workbook and sheets to writer
         writer.book= workbook
         writer.sheets = dict((ws.title, ws) for ws in workbook.worksheets)
+
 
         df.to_excel(writer, sheet_name='user_list', header=False, startrow=1, index=False)
         merged.to_excel(writer, sheet_name='genres_table', header=False, startrow=1, index=False)
@@ -75,7 +77,11 @@ def to_excel(userlist, username):
     df_genrestable = df[["ID", "genres"]].copy()
     df_genrestable = df_genrestable.explode("genres")
     df_genrestable = pd.concat([df_genrestable.drop(["genres"], axis=1), df_genrestable["genres"].apply(pd.Series)], axis=1)
-    df_genrestable.drop(columns=["id", 0], inplace=True)
+    
+    #if there is an anime without any genres in the user list the concat will genrerate an column 0
+    if 0 in df.columns:
+        df_genrestable.drop(columns=[0], inplace=True)
+    df_genrestable.drop(columns=["id"], inplace=True)
     df_genrestable["name"].fillna("no Genre", inplace=True)
 
     #filter wierd mal dates like 30/2/2022
@@ -424,7 +430,7 @@ def resize_challenge_tables(workbook, genreslist):
         sheet[cellhours] = '''=SUMIFS(tb_anime_genres[Show Duration (hours)],tb_anime_genres[GENRES],J{}, tb_anime_genres[Start Date],
         ">=" & $B$1,tb_anime_genres[Finish Date],"<="&$B$2)'''.format(row)
         cellweightedmean = "O{}".format(row)
-        sheet[cellweightedmean] = '''=IF(K{}=0,0,M{}*(K{}/$C$7)+$C$16*($C$7-K{})/$C$7)'''.format(row, row, row, row)
+        sheet[cellweightedmean] = '''=IF(K{}=0,0,M{}*(K{}/$C$7)+$C$15*($C$7-K{})/$C$7)'''.format(row, row, row, row)
         row = row+1
 
     sheet.tables['tb_challenge'].ref = 'I2:P' + str(row - 1)

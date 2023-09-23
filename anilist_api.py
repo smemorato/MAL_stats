@@ -5,8 +5,8 @@ import json
 def get_user_id(username: str):
     query = '''
     query ($name: String,) { 
-      User (name: $name ) { 
-        id
+        User (name: $name ) { 
+            id
         }   
     
     }
