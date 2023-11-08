@@ -237,7 +237,7 @@ def resize_table_progression(workbook, oldest: int):
                 sheet[cellhoursday] = "=F{}/DAY(EOMONTH(DATE(B{},D{},1),0))".format(row, row, row)
                 row = row + 1
             year = year + 1
-        table.ref = 'B2:J' + str(row - 1)
+        table.ref = 'B2:I' + str(row - 1)
 
 
 
@@ -398,10 +398,7 @@ def resize_table_progression(workbook, oldest: int):
                                      ColorScaleRule(start_type='min', start_color='f8696b',
                                                     mid_type='percentile', mid_value=50, mid_color='ffeb84',
                                                     end_type='max', end_color='63be7b'))
-    sheet.conditional_formatting.add("G3:G{}".format(row - 1),
-                                     ColorScaleRule(start_type='min', start_color='f8696b',
-                                                    mid_type='percentile', mid_value=50, mid_color='ffeb84',
-                                                    end_type='max', end_color='5a8bc6'))
+
 
     sheet.conditional_formatting.add("H3:H{}".format(row - 1),
                                      DataBarRule(start_type='num', start_value=0, end_type='num', end_value='1',
