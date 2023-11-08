@@ -3,8 +3,10 @@ import json
 import requests
 import webbrowser
 
+with open('clientid.json', 'r') as file:
+            CLIENT_ID = json.load(file)
+            CLIENT_ID = CLIENT_ID["clientid"]
 
-CLIENT_ID = '8b293228d49b14fca16cda6d118e8dee'
 # 1. Generate a new Code Verifier / Code Challenge.
 def get_new_code_verifier() -> str:
     token = secrets.token_urlsafe(100)

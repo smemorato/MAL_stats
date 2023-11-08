@@ -324,6 +324,9 @@ def resize_table_progression(workbook, oldest: int):
         IF(M{}="WINTER",">=1",IF(M{}="SPRING",">=4",IF(M{}="SUMMER",">=7",">=10"))),tb_progression_month[year],L{})
         /90'''.format(seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow, seasonrow-i+1)
         seasonrow = seasonrow + 1
+        
+
+
 
     seasonyear = seasonyear + 1
     if oldest <= today_year:
@@ -431,7 +434,10 @@ def resize_challenge_tables(workbook, genreslist):
         ">=" & $B$1,tb_anime_genres[Finish Date],"<="&$B$2)'''.format(row)
         cellweightedmean = "O{}".format(row)
         sheet[cellweightedmean] = '''=IF(K{}=0,0,M{}*(K{}/$C$7)+$C$15*($C$7-K{})/$C$7)'''.format(row, row, row, row)
-        row = row+1
+        #add this weighted mean because more useful based on the anilist 
+        cellweightedmean2 = "P{}".format(row)
+        sheet[cellweightedmean2] = '''=IF(K{}=0,0,M{}*(K{}/(K{}+15))+$C$15*15/(K{}+15))'''.format(row, row, row, row, row)
+        row = row + 1
 
     sheet.tables['tb_challenge'].ref = 'I2:P' + str(row - 1)
 
