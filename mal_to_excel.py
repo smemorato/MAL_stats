@@ -118,10 +118,12 @@ def to_excel(userlist, username):
     # resize the table to fit the new entries
     workbook = resize_table_progression(workbook, oldest)
 
-    workbook = resize_challenge_tables(workbook, df_genreslist)
+    workbook = resize_genres(workbook, df_genreslist)
 
     # add genres to table
     insert_table(df, df_genrestable, df_days, workbook, username, "mal")
+
+
 
 
 def resize_days_table(oldest: int, workbook):
@@ -410,7 +412,7 @@ def resize_table_progression(workbook, oldest: int):
 
 # I don't know who to get a list of all genres so I made a list of all genres in the user_list and then add to the tables
 # and since a new genre may be add i have to do it every time
-def resize_challenge_tables(workbook, genreslist):
+def resize_genres(workbook, genreslist):
     sheet = workbook['challenge']
     row = 3
     for genre in genreslist:
@@ -456,9 +458,12 @@ def resize_challenge_tables(workbook, genreslist):
         sheet[cellweightedmean] = '''=D{}*(B{}/COUNTIF(tb_list[Title], "<>"&""))+
         AVERAGEIF(tb_list[Score],"<>"&0,tb_list[Score])*(COUNTIF(tb_list[Title],"<>"&"")-
         B{})/COUNTIF(tb_list[Title],"<>"&"")'''.format(row, row, row)
+        cellweightedmean2 = "G{}".format(row)
+        sheet[cellweightedmean2] = '''=D{}*COUNTIF(tb_list[Title], "<>"&"")/(COUNTIF(tb_list[Title], "<>"&"")+15)+
+          AVERAGEIF(tb_list[Score],"<>"&0,tb_list[Score])*15/(COUNTIF(tb_list[Title], "<>"&"")+15)'''.format(row)
         row = row + 1
 
-    sheet.tables['tb_genres'].ref = 'A1:F' + str(row - 1)
+    sheet.tables['tb_genres'].ref = 'A1:G' + str(row - 1)
 
     return workbook
 
