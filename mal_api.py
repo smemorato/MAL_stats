@@ -2,6 +2,7 @@ import requests
 import json
 
 
+
 def request_list (username: str, access_token: str):
 
 
@@ -11,23 +12,15 @@ def request_list (username: str, access_token: str):
                   "mean,media_type"+
                   ",genres,num_episodes,start_season,source,average_episode_duration,"+
                   "studios",
-
-        # 'fields': "list_status,alternative_titles,start_date,end_date," +
-        #           "mean,rank,popularity,num_list_users,num_scoring_users,nsfw,created_at,updated_at,media_type" +
-        #           ",status,genres,num_episodes,start_season,broadcast,source,average_episode_duration," +
-        #           "rating,pictures,background,related_anime,related_manga,recommendations,studios,statistics",
-
         'status': 'completed',
         'limit': '1000',
         "nsfw": "true"
-
-
     }
     #resquest frist page of the list
     response = requests.get(url, params = PARAMS,headers={
         'Authorization': f'Bearer {access_token}'
     })
-    #print(json.dumps(response.json(),indent=3))
+
     #requests following pages
     page = response.json()
     userlist = []
@@ -39,9 +32,8 @@ def request_list (username: str, access_token: str):
                 'Authorization': f'Bearer {access_token}'
             })
             page = response.json()
-
             userlist.append(page)
-            print("another one!")
+
 
     response_list = [userlist, response.status_code]
 

@@ -10,13 +10,10 @@ import mal_to_excel
 def to_excel(userlist, username):
     file = "user_stats_template.xlsx"
     workbook = load_workbook(filename=file)
-    #print(json.dumps(userlist.json(), indent=0))
+
     userlist = userlist.json()
     df=pd.DataFrame()
     for lis in userlist["data"]["MediaListCollection"]["lists"]:
-
-        #df = pd.concat(pd.DataFrame.from_dict(lis))
-
         df = pd.concat([df,pd.json_normalize(lis,"entries")])
 
 
@@ -25,6 +22,7 @@ def to_excel(userlist, username):
                                             day=df['completedAt.day']))
     df["mediastart"] = pd.to_datetime(dict(year=df['media.startDate.year'], month=df['media.startDate.month'],
                                             day=df['media.startDate.day']))
+    # add season and year column
     df["aux"] = pd.DatetimeIndex(df['mediastart']).month
     df["aux"] = df["aux"].replace([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]], ["winter", "spring", "summer", "fall"])
     df["media.season"].fillna(df['aux'], inplace=True)
@@ -32,7 +30,7 @@ def to_excel(userlist, username):
     df["media.seasonYear"].fillna(df['aux'], inplace=True)
 
 
-
+    #df of different genres
     df_genreslist = df["media.genres"].explode().apply(pd.Series)
     df_genreslist.fillna("no Genre", inplace=True)
     df_tagslist = df["media.tags"].explode().apply(pd.Series)
@@ -40,6 +38,7 @@ def to_excel(userlist, username):
     df_genreslist = df_genreslist[0].unique()
 
 
+    #df of genre/tags relations 
     df_genrestable = df[["media.id", "media.genres"]].copy()
     df_genrestable = df_genrestable.explode("media.genres")
     df_genrestable["media.genres"].fillna("no Genre", inplace=True)
@@ -53,19 +52,13 @@ def to_excel(userlist, username):
     df_genrestable.columns = ["ID", "genres"]
 
 
-
+    #drop unused column, rename remaining and order them
     df.drop(columns=['startedAt.year', 'startedAt.month', "startedAt.day","completedAt.year","completedAt.month",
                      "completedAt.day","status","media.tags","media.genres","media.startDate.year",
                      "media.startDate.month","media.startDate.day","mediastart","aux"], inplace=True)
 
-
-
-
     df.columns=["score","ID", "title","episodes", "format","seasonYear", "season", "source", "ep duration","meanScore",
                 "startedAt", "completedAt"]
-
-
-
     df=df[["ID", "title", "format", "source", "meanScore", "startedAt", "completedAt", "score", "seasonYear",
            "season", "episodes", "ep duration"]]
 
@@ -84,9 +77,11 @@ def to_excel(userlist, username):
     df["hours a day"] = pd.to_numeric(df["show duration"], errors="coerce")/df["days watching"]
     df["episodes a day"] = df["episodes"] / df["days watching"]
 
-    # resize tables on progression table
+    # resize tables on progression table(recicle mal_to_excel function)
     workbook = mal_to_excel.resize_table_progression(workbook, oldest)
-    workbook = mal_to_excel.resize_challenge_tables(workbook, df_genreslist)
+    workbook = mal_to_excel.resize_genres(workbook, df_genreslist)
     df_days = mal_to_excel.resize_days_table(oldest, workbook)
+    workbook = mal_to_excel.forecast_table(workbook,oldest)
+
     # write list to excel
     mal_to_excel.insert_table(df, df_genrestable,df_days, workbook, username, "anilist")
